@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
-  <title>CCTV Traffic Pro (Mobile Full-width)</title>
+  <title>CCTV Traffic Pro - Fullscreen Video</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.light.min.js"></script>
   <style>
@@ -21,18 +21,26 @@
       padding: 0;
     }
 
-    /* Video wrapper - default desktop */
+    /* Video wrapper - default untuk desktop (full width tanpa margin) */
     .video-wrapper {
       position: relative;
-      width: 55%;
-      aspect-ratio: 16/9;
-      max-height: 320px;
+      width: 100%;
+      aspect-ratio: 16 / 9;
       background: #020617;
-      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 25px 50px -12px black;
-      border: 1px solid rgba(71, 85, 105, 0.3);
-      margin: 0 auto;
+      box-shadow: none;
+      border: none;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    /* Jika ingin sedikit bayangan untuk estetika desktop, bisa ditambahkan, tapi tidak membuat ruang kosong */
+    @media (min-width: 768px) {
+      .video-wrapper {
+        border-radius: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        border: none;
+      }
     }
 
     #main-video {
@@ -184,30 +192,38 @@
       color: white;
     }
 
-    /* === MOBILE OPTIMIZATION: FULL WIDTH VIDEO === */
-    @media (max-width: 768px) {
-      .video-wrapper {
-        width: 100% !important;
-        max-height: none !important;
-        border-radius: 0 !important;
-        border-left: none !important;
-        border-right: none !important;
-        margin: 0 !important;
-        aspect-ratio: 16/9;
-      }
+    /* Hilangkan semua padding/margin yang menyebabkan ruang kosong di sekitar video */
+    .video-section {
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #020617;
+    }
 
+    /* Container utama: video mengambil ruang fleksibel penuh, sidebar tetap */
+    main {
+      gap: 0;
+    }
+
+    /* Untuk desktop, pastikan video section tidak punya padding dan border kanan */
+    @media (min-width: 768px) {
       .video-section {
         padding: 0 !important;
-        border-bottom: none !important;
+        border-right: 1px solid #1e293b;
       }
 
-      #video-box {
-        border-radius: 0 !important;
+      .sidebar-container {
+        width: 360px;
+        flex-shrink: 0;
       }
+    }
 
-      /* Hilangkan padding berlebih */
-      main {
-        flex-direction: column;
+    /* Mobile: video full width tanpa border radius dan sidebar di bawah */
+    @media (max-width: 768px) {
+      .video-section {
+        border-bottom: none;
       }
 
       .sidebar-container {
@@ -226,7 +242,7 @@
       }
     }
 
-    /* Landscape mobile tetap full width */
+    /* Landscape mobile tetap full */
     @media (max-height: 500px) and (orientation: landscape) {
       .video-wrapper {
         aspect-ratio: 16/9;
@@ -244,7 +260,7 @@
           <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg></div>
       <div>
-        <h1 class="font-black">Cctv<span class="text-blue-400">ATM</span></h1>
+        <h1 class="font-black">CCTV<span class="text-blue-400">Traffic</span></h1>
         <p id="status-bar" class="text-[10px] text-slate-400">Memuat data...</p>
       </div>
     </div>
@@ -252,9 +268,9 @@
   </header>
 
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-    <!-- VIDEO SECTION: padding dihilangkan di mobile -->
-    <section class="video-section flex flex-col items-center md:flex-1 justify-center md:border-r border-slate-800 flex-shrink-0" style="padding: 1rem;">
-      <div class="video-wrapper group" id="video-box">
+    <!-- VIDEO SECTION: tanpa padding dan margin -->
+    <section class="video-section flex-1 flex items-center justify-center">
+      <div class="video-wrapper group w-full" id="video-box">
         <video id="main-video" playsinline webkit-playsinline muted></video>
         <div id="play-overlay" class="overlay"><button id="play-btn" class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
@@ -278,7 +294,7 @@
       </div>
     </section>
 
-    <aside class="sidebar-container w-full md:w-96 flex flex-col overflow-hidden">
+    <aside class="sidebar-container flex flex-col overflow-hidden">
       <div class="p-3 bg-slate-900/50 border-b border-slate-800"><input type="text" id="cctv-search" placeholder="Cari ruas jalan..." class="search-input"></div>
       <div id="menu-container" class="flex-1 overflow-y-auto custom-scroll p-3 space-y-2"></div>
     </aside>
@@ -286,7 +302,7 @@
 
   <script>
     // ⚠️ GANTI URL_INI DENGAN WEB APP URL DARI GAS ANDA ⚠️
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyQ6rsoTVQz3tXeB1bxKZPvy7gCw350oQiohFxxRazt_3VO9J_XvI8_ZML9n5FrUMRhIg/exec'; // <--- GANTI
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycb.../exec'; // <--- GANTI
     class TrafficApp {
       constructor() {
         this.video = document.getElementById('main-video');
@@ -307,7 +323,7 @@
         this._setupSearch();
         this._setupButtons();
         this._setupVideo();
-        document.getElementById('status-bar').innerHTML = '✅ Live';
+        document.getElementById('status-bar').innerHTML = '✅ Data siap';
       }
       async _fetchData() {
         try {
