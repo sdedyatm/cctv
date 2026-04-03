@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>CCTV Traffic Pro (Mobile Full-width)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.light.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      overscroll-behavior: none;
+      background: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Video wrapper - default desktop */
+    .video-wrapper {
+      position: relative;
+      width: 55%;
+      aspect-ratio: 16/9;
+      max-height: 320px;
+      background: #020617;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px black;
+      border: 1px solid rgba(71, 85, 105, 0.3);
+      margin: 0 auto;
+    }
+
+    #main-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: black;
+    }
+
+    /* Custom scroll */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+
+    /* Submenu accordion */
+    .submenu-container {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.4s ease, opacity 0.3s;
+      transform: translateY(-8px);
+    }
+
+    .submenu-container.open {
+      max-height: 6000px;
+      opacity: 1;
+      transform: translateY(0);
+      margin-top: 0.75rem;
+    }
+
+    .category-btn {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-btn.is-open {
+      border-color: #3b82f6;
+      background: #1e293b;
+    }
+
+    .chevron-icon {
+      width: 18px;
+      transition: transform 0.3s;
+    }
+
+    .category-btn.is-open .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    .sub-btn {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 14px 16px 14px 28px;
+      text-align: left;
+      font-family: monospace;
+      font-size: 16px;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .sub-btn.active-btn {
+      border-left: 4px solid #3b82f6;
+      background: #1e293b;
+      color: #60a5fa;
+    }
+
+    .status-indicator {
+      display: block;
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    .status-available {
+      color: #22c55e;
+    }
+
+    .status-unavailable {
+      color: #ef4444;
+      animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.2
+      }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #3b82f6;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .header-container {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .search-input {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px 16px;
+      width: 100%;
+      color: white;
+    }
+
+    /* === MOBILE OPTIMIZATION: FULL WIDTH VIDEO === */
+    @media (max-width: 768px) {
+      .video-wrapper {
+        width: 100% !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        margin: 0 !important;
+        aspect-ratio: 16/9;
+      }
+
+      .video-section {
+        padding: 0 !important;
+        border-bottom: none !important;
+      }
+
+      #video-box {
+        border-radius: 0 !important;
+      }
+
+      /* Hilangkan padding berlebih */
+      main {
+        flex-direction: column;
+      }
+
+      .sidebar-container {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #1e293b;
+      }
+
+      .category-btn {
+        padding: 14px 16px;
+      }
+
+      .sub-btn {
+        font-size: 14px;
+        padding: 12px 12px 12px 24px;
+      }
+    }
+
+    /* Landscape mobile tetap full width */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .video-wrapper {
+        aspect-ratio: 16/9;
+        max-height: 85vh;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden">
+
+  <header class="header-container px-4 py-3 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-blue-600 rounded-xl"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg></div>
+      <div>
+        <h1 class="font-black">Cctv<span class="text-blue-400">ATM</span></h1>
+        <p id="status-bar" class="text-[10px] text-slate-400">Memuat data...</p>
+      </div>
+    </div>
+    <div id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
+  </header>
+
+  <main class="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+    <!-- VIDEO SECTION: padding dihilangkan di mobile -->
+    <section class="video-section flex flex-col items-center md:flex-1 justify-center md:border-r border-slate-800 flex-shrink-0" style="padding: 1rem;">
+      <div class="video-wrapper group" id="video-box">
+        <video id="main-video" playsinline webkit-playsinline muted></video>
+        <div id="play-overlay" class="overlay"><button id="play-btn" class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg></button>
+          <p class="text-xs">Tap untuk mulai</p>
+        </div>
+        <div id="error-overlay" class="overlay"><span class="text-3xl">⚠️</span>
+          <p class="text-red-400 text-xs">CCTV GANGGUAN</p>
+          <p id="error-detail" class="text-[10px] text-center"></p><button id="retry-btn" class="mt-2 px-4 py-2 bg-blue-600 rounded-lg text-xs">Coba Lagi</button>
+        </div>
+        <div id="loader" class="overlay">
+          <div class="spinner"></div><span class="text-[10px]">koneksi...</span>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+          <h2 id="display-title" class="text-sm font-bold text-blue-400">STANDBY</h2>
+          <p id="display-sub" class="text-[9px] uppercase">Pilih ruas jalan</p>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none"><button id="fs-btn" class="pointer-events-auto p-2 bg-white/10 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg></button></div>
+      </div>
+    </section>
+
+    <aside class="sidebar-container w-full md:w-96 flex flex-col overflow-hidden">
+      <div class="p-3 bg-slate-900/50 border-b border-slate-800"><input type="text" id="cctv-search" placeholder="Cari ruas jalan..." class="search-input"></div>
+      <div id="menu-container" class="flex-1 overflow-y-auto custom-scroll p-3 space-y-2"></div>
+    </aside>
+  </main>
+
+  <script>
+    // ⚠️ GANTI URL_INI DENGAN WEB APP URL DARI GAS ANDA ⚠️
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyQ6rsoTVQz3tXeB1bxKZPvy7gCw350oQiohFxxRazt_3VO9J_XvI8_ZML9n5FrUMRhIg/exec'; // <--- GANTI
+    class TrafficApp {
+      constructor() {
+        this.video = document.getElementById('main-video');
+        this.loader = document.getElementById('loader');
+        this.errBox = document.getElementById('error-overlay');
+        this.playBox = document.getElementById('play-overlay');
+        this.hls = null;
+        this.currentUrl = null;
+        this.fatalCount = 0;
+        this.autoplayBlocked = false;
+        this.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        this.categories = [];
+        this._init();
+      }
+      async _init() {
+        await this._fetchData();
+        this._renderMenu();
+        this._setupSearch();
+        this._setupButtons();
+        this._setupVideo();
+        document.getElementById('status-bar').innerHTML = '✅ Live';
+      }
+      async _fetchData() {
+        try {
+          document.getElementById('status-bar').innerHTML = '🔄 Mengambil data...';
+          const res = await fetch(GAS_URL);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (json.status === 'success' && Array.isArray(json.data)) {
+            this.categories = json.data;
+            document.getElementById('status-bar').innerHTML = `✅ ${this.categories.length} kategori dimuat`;
+          } else {
+            throw new Error('Format data tidak sesuai');
+          }
+        } catch (err) {
+          console.error(err);
+          document.getElementById('status-bar').innerHTML = '❌ Gagal ambil data. Periksa URL GAS.';
+          document.getElementById('menu-container').innerHTML = `<div class="text-red-400 p-4 text-center">Gagal mengambil data.<br>${err.message}</div>`;
+        }
+      }
+      _renderMenu() {
+        const container = document.getElementById('menu-container');
+        if (!this.categories.length) return;
+        container.innerHTML = this.categories.map(cat => `
+        <div class="category-group">
+          <button class="category-btn" data-action="toggle" data-id="${cat.id}">
+            <span class="flex items-center gap-2"><span>${cat.icon || '📹'}</span> ${cat.name}</span>
+            <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2"/></svg>
+          </button>
+          <div id="sub-${cat.id}" class="submenu-container" style="display:grid;gap:6px">
+            ${cat.subs.map(sub => `
+              <button class="sub-btn" data-action="play" data-cat="${this.escapeHtml(cat.name)}" data-sub="${this.escapeHtml(sub.name)}" data-url="${sub.url}">
+                ${this.escapeHtml(sub.name)}
+                <span class="status-indicator ${sub.url === '#' ? 'status-unavailable' : 'status-available'}">
+                  ${sub.url === '#' ? 'BELUM TERSEDIA' : 'TERSEDIA'}
+                </span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+        container.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          if (btn.dataset.action === 'toggle') this._toggleSub(btn.dataset.id, btn);
+          else if (btn.dataset.action === 'play') this._playSub(btn.dataset.cat, btn.dataset.sub, btn.dataset.url, btn);
+        });
+      }
+      escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+          if (m === '&') return '&amp;';
+          if (m === '<') return '&lt;';
+          if (m === '>') return '&gt;';
+          return m;
+        });
+      }
+      _toggleSub(id, btn) {
+        const panel = document.getElementById('sub-' + id);
+        if (!panel) return;
+        const isOpen = panel.classList.contains('open');
+        document.querySelectorAll('.submenu-container.open').forEach(p => p.classList.remove('open'));
+        document.querySelectorAll('.category-btn.is-open').forEach(b => b.classList.remove('is-open'));
+        if (!isOpen) {
+          panel.classList.add('open');
+          btn.classList.add('is-open');
+          if (this.isMobile) setTimeout(() => btn.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+          }), 100);
+        }
+      }
+      _playSub(cat, sub, url, btn) {
+        if (!url || url === '#') return this._showError('Stream belum tersedia.');
+        if (url === this.currentUrl) return;
+        this.currentUrl = url;
+        this.fatalCount = 0;
+        this.autoplayBlocked = false;
+        document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active-btn'));
+        btn.classList.add('active-btn');
+        document.getElementById('display-title').textContent = sub;
+        document.getElementById('display-sub').textContent = cat;
+        this._showLoader();
+        this._destroyHls();
+        if (Hls.isSupported()) this._loadHls(url);
+        else if (this.video.canPlayType('application/vnd.apple.mpegurl')) this._loadNative(url);
+        else this._showError('Browser tidak support HLS.');
+      }
+      _loadHls(url) {
+        const hls = new Hls({
+          enableWorker: false,
+          maxBufferLength: 5
+        });
+        this.hls = hls;
+        hls.loadSource(url);
+        hls.attachMedia(this.video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          this._hideLoader();
+          this._tryPlay();
+        });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (!data.fatal) return;
+          this.fatalCount++;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && this.fatalCount <= 3) setTimeout(() => hls.startLoad(), 2000);
+          else this._showError('Gagal memuat stream.');
+        });
+      }
+      _loadNative(url) {
+        this.video.src = url;
+        this.video.load();
+        this.video.addEventListener('loadedmetadata', () => {
+          this._hideLoader();
+          this._tryPlay();
+        }, {
+          once: true
+        });
+        this.video.addEventListener('error', () => this._showError('Stream error.'), {
+          once: true
+        });
+      }
+      _tryPlay() {
+        this.video.play().then(() => {
+          this.playBox.classList.remove('show');
+        }).catch(() => {
+          this.autoplayBlocked = true;
+          this._hideLoader();
+          this.playBox.classList.add('show');
+        });
+      }
+      _manualPlay() {
+        this.playBox.classList.remove('show');
+        this.video.play().catch(() => this._retry());
+      }
+      _destroyHls() {
+        if (this.hls) {
+          this.hls.destroy();
+          this.hls = null;
+        }
+        this.video.pause();
+        this.video.removeAttribute('src');
+        this.video.load();
+      }
+      _showLoader() {
+        this.loader.classList.add('show');
+        this.errBox.classList.remove('show');
+        this.playBox.classList.remove('show');
+      }
+      _hideLoader() {
+        this.loader.classList.remove('show');
+      }
+      _showError(msg) {
+        this._destroyHls();
+        this._hideLoader();
+        this.errBox.classList.add('show');
+        document.getElementById('error-detail').textContent = msg;
+      }
+      _retry() {
+        if (!this.currentUrl || this.currentUrl === '#') return;
+        const url = this.currentUrl;
+        this.currentUrl = null;
+        this._showLoader();
+        this._destroyHls();
+        setTimeout(() => {
+          this.currentUrl = url;
+          Hls.isSupported() ? this._loadHls(url) : this._loadNative(url);
+        }, 800);
+      }
+      _setupSearch() {
+        document.getElementById('cctv-search').addEventListener('input', e => {
+          const q = e.target.value.toLowerCase();
+          document.querySelectorAll('.category-group').forEach(g => {
+            g.style.display = (!q || g.textContent.toLowerCase().includes(q)) ? '' : 'none';
+          });
+        });
+      }
+      _setupButtons() {
+        document.getElementById('play-btn').onclick = () => this._manualPlay();
+        document.getElementById('retry-btn').onclick = () => this._retry();
+        document.getElementById('fs-btn').onclick = () => {
+          const t = this.isMobile ? this.video : document.getElementById('video-box');
+          if (!document.fullscreenElement)(t.requestFullscreen || t.webkitRequestFullscreen).call(t);
+          else(document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        };
+      }
+      _setupVideo() {
+        this.video.addEventListener('stalled', () => {
+          if (this.currentUrl) setTimeout(() => {
+            if (this.video.readyState < 3 && !this.video.paused) this.video.play().catch(() => {});
+          }, 5000);
+        });
+        this.video.addEventListener('pause', () => {
+          if (!this.autoplayBlocked && this.currentUrl && !this.video.ended && this.video.paused) setTimeout(() => this.video.play().catch(() => {}), 1200);
+        });
+      }
+    }
+    window.app = new TrafficApp();
+  </script>
+</body>
+
+</html>
